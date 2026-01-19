@@ -19,30 +19,30 @@ type Logger struct {
 	SqlLogger *zap.Logger
 }
 
-func newSqlLogger(conf *viper.Viper) *zap.Logger {
-	lp := conf.GetString("log.sql_log_file_name")
-	lv := conf.GetString("log.log_level")
-	var level zapcore.Level
-	switch lv {
-	case "debug":
-		level = zap.DebugLevel
-	case "info":
-		level = zap.InfoLevel
-	case "warn":
-		level = zap.WarnLevel
-	case "error":
-		level = zap.ErrorLevel
-	default:
-		level = zap.InfoLevel
-	}
-	hook := lumberjack.Logger{
-		Filename:   lp,                             // Log file path
-		MaxSize:    conf.GetInt("log.max_size"),    // Maximum size unit for each log file: M
-		MaxBackups: conf.GetInt("log.max_backups"), // The maximum number of backups that can be saved for log files
-		MaxAge:     conf.GetInt("log.max_age"),     // Maximum number of days the file can be saved
-		Compress:   conf.GetBool("log.compress"),   // Compression or not
-	}
-}
+//	func newSqlLogger(conf *viper.Viper) *zap.Logger {
+//		lp := conf.GetString("log.sql_log_file_name")
+//		lv := conf.GetString("log.log_level")
+//		var level zapcore.Level
+//		switch lv {
+//		case "debug":
+//			level = zap.DebugLevel
+//		case "info":
+//			level = zap.InfoLevel
+//		case "warn":
+//			level = zap.WarnLevel
+//		case "error":
+//			level = zap.ErrorLevel
+//		default:
+//			level = zap.InfoLevel
+//		}
+//		hook := lumberjack.Logger{
+//			Filename:   lp,                             // Log file path
+//			MaxSize:    conf.GetInt("log.max_size"),    // Maximum size unit for each log file: M
+//			MaxBackups: conf.GetInt("log.max_backups"), // The maximum number of backups that can be saved for log files
+//			MaxAge:     conf.GetInt("log.max_age"),     // Maximum number of days the file can be saved
+//			Compress:   conf.GetBool("log.compress"),   // Compression or not
+//		}
+//	}
 func NewLog(conf *viper.Viper) *Logger {
 	// log address "out.log" User-defined
 	lp := conf.GetString("log.log_file_name")
@@ -82,7 +82,7 @@ func NewLog(conf *viper.Viper) *Logger {
 			EncodeLevel:    zapcore.LowercaseColorLevelEncoder,
 			EncodeTime:     timeEncoder,
 			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   zapcore.FullCallerEncoder,
+			EncodeCaller:   zapcore.ShortCallerEncoder,
 		})
 	} else {
 		encoder = zapcore.NewJSONEncoder(zapcore.EncoderConfig{
@@ -116,8 +116,8 @@ func NewLog(conf *viper.Viper) *Logger {
 }
 
 func timeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	//enc.AppendString(t.Format("2006-01-02 15:04:05"))
-	enc.AppendString(t.Format("2006-01-02 15:04:05.000000000"))
+	enc.AppendString(t.Format("2006-01-02 15:04:05"))
+	//enc.AppendString(t.Format("2006-01-02 15:04:05.000000000"))
 }
 
 // WithValue Adds a field to the specified context

@@ -15,6 +15,7 @@ import (
 	"ops/internal/server"
 	"ops/internal/service"
 	"ops/pkg/app"
+	"ops/pkg/glb"
 	"ops/pkg/jwt"
 	"ops/pkg/log"
 	"ops/pkg/server/http"
@@ -51,13 +52,15 @@ func NewWire(viperViper *viper.Viper, logger *log.Logger) (*app.App, func(), err
 
 var repositorySet = wire.NewSet(repository.NewDB, repository.NewRepository, repository.NewTransaction, repository.NewUserRepository, repository.NewCasbinEnforcer, repository.NewAdminRepository)
 
-var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewAdminService)
+var serviceSet = wire.NewSet(service.NewService, service.NewUserService, service.NewAdminService, service.NewGitlabService)
 
 var handlerSet = wire.NewSet(handler.NewHandler, handler.NewUserHandler, handler.NewAdminHandler)
 
 var jobSet = wire.NewSet(job.NewJob, job.NewUserJob)
 
 var serverSet = wire.NewSet(server.NewHTTPServer, server.NewJobServer)
+
+var pkgSet = wire.NewSet(glb.NewGitLabClient)
 
 // build App
 func newApp(

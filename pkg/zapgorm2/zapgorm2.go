@@ -90,6 +90,9 @@ func (l Logger) Trace(ctx context.Context, begin time.Time, fc func() (string, i
 		}
 	case l.LogLevel == gormlogger.Info:
 		sql, rows := fc()
+		if sql == "SELECT * FROM `casbin_rule` ORDER BY ID" {
+			return
+		}
 		if rows == -1 {
 			logger.Info("trace", zap.String("elapsed", elapsedStr), zap.Int64("rows", rows), zap.String("sql", sql))
 		} else {

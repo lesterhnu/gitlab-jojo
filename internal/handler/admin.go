@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	v1 "ops/api/v1"
 	"ops/internal/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 type AdminHandler struct {

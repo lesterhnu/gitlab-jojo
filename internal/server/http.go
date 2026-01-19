@@ -1,12 +1,6 @@
 package server
 
 import (
-	"github.com/casbin/casbin/v2"
-	"github.com/gin-contrib/static"
-	"github.com/gin-gonic/gin"
-	"github.com/spf13/viper"
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	nethttp "net/http"
 	"ops/docs"
 	"ops/internal/handler"
@@ -15,6 +9,13 @@ import (
 	"ops/pkg/log"
 	"ops/pkg/server/http"
 	"ops/web"
+
+	"github.com/casbin/casbin/v2"
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
+	"github.com/spf13/viper"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func NewHTTPServer(
@@ -25,7 +26,11 @@ func NewHTTPServer(
 	adminHandler *handler.AdminHandler,
 	userHandler *handler.UserHandler,
 ) *http.Server {
-	gin.SetMode(gin.DebugMode)
+	if conf.GetString("env") == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	} else {
+		gin.SetMode(gin.DebugMode)
+	}
 	s := http.NewServer(
 		gin.Default(),
 		logger,
@@ -67,35 +72,45 @@ func NewHTTPServer(
 		}
 
 		// Strict permission routing group
-		strictAuthRouter := v1.Group("/").Use(middleware.StrictAuth(jwt, logger), middleware.AuthMiddleware(e))
-		{
-			strictAuthRouter.GET("/users", userHandler.GetUsers)
+		strictAuthRouterGroup := v1.Group("/")
 
-			strictAuthRouter.GET("/menus", adminHandler.GetMenus)
-			strictAuthRouter.GET("/admin/menus", adminHandler.GetAdminMenus)
-			strictAuthRouter.POST("/admin/menu", adminHandler.MenuCreate)
-			strictAuthRouter.PUT("/admin/menu", adminHandler.MenuUpdate)
-			strictAuthRouter.DELETE("/admin/menu", adminHandler.MenuDelete)
-
-			strictAuthRouter.GET("/admin/users", adminHandler.GetAdminUsers)
-			strictAuthRouter.GET("/admin/user", adminHandler.GetAdminUser)
-			strictAuthRouter.PUT("/admin/user", adminHandler.AdminUserUpdate)
-			strictAuthRouter.POST("/admin/user", adminHandler.AdminUserCreate)
-			strictAuthRouter.DELETE("/admin/user", adminHandler.AdminUserDelete)
-			strictAuthRouter.GET("/admin/user/permissions", adminHandler.GetUserPermissions)
-			strictAuthRouter.GET("/admin/role/permissions", adminHandler.GetRolePermissions)
-			strictAuthRouter.PUT("/admin/role/permission", adminHandler.UpdateRolePermission)
-			strictAuthRouter.GET("/admin/roles", adminHandler.GetRoles)
-			strictAuthRouter.POST("/admin/role", adminHandler.RoleCreate)
-			strictAuthRouter.PUT("/admin/role", adminHandler.RoleUpdate)
-			strictAuthRouter.DELETE("/admin/role", adminHandler.RoleDelete)
-
-			strictAuthRouter.GET("/admin/apis", adminHandler.GetApis)
-			strictAuthRouter.POST("/admin/api", adminHandler.ApiCreate)
-			strictAuthRouter.PUT("/admin/api", adminHandler.ApiUpdate)
-			strictAuthRouter.DELETE("/admin/api", adminHandler.ApiDelete)
-
-		}
+		registeAdminRouter(strictAuthRouterGroup, adminHandler)
+		registeUserRouter(strictAuthRouterGroup, userHandler)
+		strictAuthRouterGroup.Use(middleware.StrictAuth(jwt, logger), middleware.AuthMiddleware(e))
 	}
 	return s
+}
+
+func registeAdminRouter(strictAuthRouter *gin.RouterGroup, adminHandler *handler.AdminHandler) *gin.RouterGroup {
+	//strictAuthRouter.Group("/admin", func(c *gin.Context) {
+	//
+	//})
+	strictAuthRouter.GET("/menus", adminHandler.GetMenus)
+	strictAuthRouter.GET("/admin/menus", adminHandler.GetAdminMenus)
+	strictAuthRouter.POST("/admin/menu", adminHandler.MenuCreate)
+	strictAuthRouter.PUT("/admin/menu", adminHandler.MenuUpdate)
+	strictAuthRouter.DELETE("/admin/menu", adminHandler.MenuDelete)
+
+	strictAuthRouter.GET("/admin/users", adminHandler.GetAdminUsers)
+	strictAuthRouter.GET("/admin/user", adminHandler.GetAdminUser)
+	strictAuthRouter.PUT("/admin/user", adminHandler.AdminUserUpdate)
+	strictAuthRouter.POST("/admin/user", adminHandler.AdminUserCreate)
+	strictAuthRouter.DELETE("/admin/user", adminHandler.AdminUserDelete)
+	strictAuthRouter.GET("/admin/user/permissions", adminHandler.GetUserPermissions)
+	strictAuthRouter.GET("/admin/role/permissions", adminHandler.GetRolePermissions)
+	strictAuthRouter.PUT("/admin/role/permission", adminHandler.UpdateRolePermission)
+	strictAuthRouter.GET("/admin/roles", adminHandler.GetRoles)
+	strictAuthRouter.POST("/admin/role", adminHandler.RoleCreate)
+	strictAuthRouter.PUT("/admin/role", adminHandler.RoleUpdate)
+	strictAuthRouter.DELETE("/admin/role", adminHandler.RoleDelete)
+
+	strictAuthRouter.GET("/admin/apis", adminHandler.GetApis)
+	strictAuthRouter.POST("/admin/api", adminHandler.ApiCreate)
+	strictAuthRouter.PUT("/admin/api", adminHandler.ApiUpdate)
+	strictAuthRouter.DELETE("/admin/api", adminHandler.ApiDelete)
+	return strictAuthRouter
+}
+func registeUserRouter(strictAuthRouter *gin.RouterGroup, userHandler *handler.UserHandler) *gin.RouterGroup {
+	strictAuthRouter.GET("/users", userHandler.GetUsers)
+	return strictAuthRouter
 }

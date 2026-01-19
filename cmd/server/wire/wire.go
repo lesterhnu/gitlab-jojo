@@ -4,18 +4,20 @@
 package wire
 
 import (
-	"github.com/google/wire"
-	"github.com/spf13/viper"
 	"ops/internal/handler"
 	"ops/internal/job"
 	"ops/internal/repository"
 	"ops/internal/server"
 	"ops/internal/service"
 	"ops/pkg/app"
+	"ops/pkg/glb"
 	"ops/pkg/jwt"
 	"ops/pkg/log"
 	"ops/pkg/server/http"
 	"ops/pkg/sid"
+
+	"github.com/google/wire"
+	"github.com/spf13/viper"
 )
 
 var repositorySet = wire.NewSet(
@@ -32,6 +34,7 @@ var serviceSet = wire.NewSet(
 	service.NewService,
 	service.NewUserService,
 	service.NewAdminService,
+	service.NewGitlabService,
 )
 
 var handlerSet = wire.NewSet(
@@ -47,6 +50,9 @@ var jobSet = wire.NewSet(
 var serverSet = wire.NewSet(
 	server.NewHTTPServer,
 	server.NewJobServer,
+)
+var pkgSet = wire.NewSet(
+	glb.NewGitLabClient,
 )
 
 // build App
